@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <concepts>
 #include <optional>
+#include "Concepts.hpp"
 
 namespace TypeTraits
 {
@@ -34,6 +35,24 @@ namespace TypeTraits
 		}
 	}
 
+	template<typename Head, typename...>
+	using head_t = Head;
+
+	template<std::size_t Index, typename Head, typename... Tail>
+	struct TypeAtIndex
+	{
+		using Type = TypeAtIndex<Index - 1, Tail...>::Type;
+	};
+
+	template<typename Head, typename... Tail>
+	struct TypeAtIndex<0u, Head, Tail...>
+	{
+		using Type = Head;
+	};
+
+	template<std::size_t Index, typename... TypeList>
+	using TypeAtIndex_t = TypeAtIndex<Index, TypeList...>::Type;
+
 	template<typename WantedType>
 	constexpr bool is_in_list() noexcept
 	{
@@ -53,12 +72,12 @@ namespace TypeTraits
 		}
 	}
 
-	/*
-	template<typename Head, typename... Tail>
-	constexpr bool unique_types() noexcept
-	{
-		return (!is_in_list<Head, Tail>() && ... && !is_in_list<Tail...>());
-	}*/
+	template<typename Callable, typename... Args>
+	using ResultType = decltype(std::invoke(std::declval<Callable>(), std::declval<Args>()...));
+
+	template<typename Callable, typename HeadResultType, typename... TailResultTypes>
+	constexpr bool AllResultTypesEqual = 
+		(std::same_as<ResultType<Callable, HeadResultType>, ResultType<Callable, TailResultTypes>> && ...);
 }
 
 #endif // ! CUSTOM_TYPE_TRAITS_HPP_

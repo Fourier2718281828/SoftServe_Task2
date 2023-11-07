@@ -5,6 +5,9 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BasicAnyType.hpp" />
     <ClInclude Include="AnyType.hpp" />
+    <ClInclude Include="Concepts.hpp" />
+    <ClInclude Include="Operators.hpp" />
   </ItemGroup>
 </Project>

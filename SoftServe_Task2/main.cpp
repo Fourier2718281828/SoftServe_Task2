@@ -1,44 +1,58 @@
 #include <iostream>
-#include <variant>
-
 #include "AnyType.hpp"
-#include "CustomTypeTraits.hpp"
 
+template<typename T>
+concept OstreamPrintable = requires(T a, std::ostream & stream)
+{
+	{ stream << a } -> std::same_as<std::ostream&>;
+};
+
+struct Printer
+{
+	template<OstreamPrintable T>
+	void operator() (const T& actual_value)
+	{
+		std::cout << actual_value;
+	}
+
+	void operator() (const wchar_t& actual_value)
+	{
+		std::wcout << actual_value;
+	}
+};
+
+void print(AnyType a)
+{
+	a.visit(Printer{});
+}
 
 int main()
 {
-	AnyType<int, double, float> a = 1.0;
+	static_assert(std::is_default_constructible_v <AnyType>);
+	static_assert(std::is_copy_constructible_v <AnyType>);
+	static_assert(std::is_copy_assignable_v <AnyType>);
+	static_assert(std::is_move_constructible_v <AnyType>);
+	static_assert(std::is_move_assignable_v <AnyType>);
 
 
-	std::cout << a.current_type_identifier() << '\n';
-	a = 1;
-	std::cout << a.current_type_identifier() << '\n';
-	a = 1.0f;
-	std::cout << a.current_type_identifier() << '\n';
+	AnyType empty{};
+	AnyType a = 1;
+	AnyType chhh = u8'a';
 
-	static_assert(TypeTraits::is_in_list<int, int>());
+	print(chhh);
+	std::cout << '\n';
+	print(a + chhh);
 
-	a = 1;
-	int a_int = a.to<int>();
-	std::cout << "converted = " << a_int << '\n';
+	BasicAnyType<int, std::size_t> aa = 2;
+	BasicAnyType<int, std::size_t> bb = 1;
 
-	try
-	{
-		double a_long = a.to<double>();
-	}
-	catch (const std::bad_cast& ex)
-	{
-		std::cout << ex.what() << '\n';
-	}
+	aa = aa << bb;
+	aa.visit([](const int aaaa) {std::cout << aaaa << '\n'; });
 
-	/*AnyTypeStorage<std::size_t, double, int> storage{};
-	get_value_by_index<1u>(storage) = 2;
+	a.reset();
 
-	std::cout << get_value_by_index<1u>(storage) << '\n';
-
-	std::cout << sizeof (decltype(storage)) << '\n';
-	std::cout << storage.head() << '\n';
-	std::cout << storage.tail().head() << '\n';*/
+	std::cout << (a == empty) << '\n';
+	std::cout << (a != empty) << '\n';
 
 	return EXIT_SUCCESS;
 }
